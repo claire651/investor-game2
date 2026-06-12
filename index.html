@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Investor Challenge</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #fff; color: #161003; }
+
+  /* Colours */
+  :root {
+    --melon500: #de006f;
+    --melon600: #ba036e;
+    --melon700: #8d035f;
+    --melon50:  #fef4f9;
+    --melon100: #fce8f3;
+    --melon150: #f8c7e1;
+    --melon300: #f679be;
+    --berry600: #931bd0;
+    --grape500: #b930c5;
+    --dark:     #161003;
+  }
+
+  .screen { display: none; padding: 24px 20px 40px; min-height: 100vh; }
+  .screen.active { display: block; }
+
+  h1 { font-size: 26px; font-weight: 800; line-height: 1.1; margin-bottom: 8px; color: var(--dark); }
+  h2 { font-size: 18px; font-weight: 700; margin-bottom: 10px; color: var(--dark); }
+  p  { font-size: 14px; line-height: 1.5; color: #555; margin-bottom: 10px; }
+
+  .brand   { color: var(--melon500); }
+  .pill    { display: inline-block; background: var(--melon500); color: #fff; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 10px; }
+  .pill.berry { background: var(--berry600); }
+  .pill.grape { background: var(--grape500); }
+
+  /* STEPS */
+  .steps { display: flex; gap: 5px; margin-bottom: 20px; }
+  .step-dot { flex: 1; height: 4px; border-radius: 2px; background: #eee; }
+  .step-dot.done   { background: var(--melon500); }
+  .step-dot.active { background: var(--melon300); }
+
+  /* TEAM INPUT */
+  .team-input { width: 100%; padding: 14px 16px; font-size: 18px; font-weight: 700; border: 2.5px solid var(--melon500); border-radius: 12px; outline: none; color: var(--dark); margin-bottom: 16px; }
+  .team-input::placeholder { color: #ccc; font-weight: 400; }
+
+  /* YEAR BADGE */
+  .year-badge { background: var(--dark); color: #fff; border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; }
+  .year-badge.berry { background: var(--berry600); }
+  .year-badge.grape { background: var(--grape500); }
+  .year-badge.green { background: #166534; }
+  .year-badge .yr   { font-size: 11px; font-weight: 700; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .year-badge h2    { color: #fff; font-size: 20px; margin: 0 0 4px; }
+  .year-badge p     { color: rgba(255,255,255,0.75); font-size: 13px; margin: 0; }
+
+  /* STRATEGY CARDS */
+  .strategy-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+  .strategy-card { border: 2px solid #eee; border-radius: 12px; padding: 14px 16px; cursor: pointer; background: #fff; transition: border-color 0.15s, background 0.15s; }
+  .strategy-card.selected { border-color: var(--melon500); background: var(--melon50); }
+  .strategy-card .tag  { font-size: 10px; font-weight: 700; color: var(--melon500); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
+  .strategy-card h3    { font-size: 15px; font-weight: 700; margin-bottom: 3px; color: var(--dark); }
+  .strategy-card p     { font-size: 12px; margin: 0; color: #666; }
+
+  /* SLIDERS */
+  .alloc-item { margin-bottom: 14px; }
+  .alloc-header { display: flex; justify-content: space-between; margin-bottom: 5px; }
+  .alloc-label { font-size: 13px; font-weight: 600; color: var(--dark); }
+  .alloc-value { font-size: 13px; font-weight: 700; color: var(--melon500); }
+  input[type=range] { width: 100%; accent-color: var(--melon500); }
+  .alloc-total { background: var(--melon100); border-radius: 10px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .alloc-total span { font-size: 13px; font-weight: 600; color: var(--dark); }
+  .total-num { font-size: 20px; font-weight: 800; color: var(--melon500); }
+  .total-warn { color: #c00 !important; }
+
+  /* ALL-IN PICKER */
+  .allin-card { border: 2px solid #eee; border-radius: 10px; padding: 12px 14px; cursor: pointer; margin-bottom: 8px; background: #fff; transition: border-color 0.15s, background 0.15s; }
+  .allin-card.selected { border-color: var(--melon500); background: var(--melon50); }
+  .allin-card-name { font-size: 14px; font-weight: 700; color: var(--dark); }
+  .allin-card-type { font-size: 11px; color: #888; margin-top: 2px; }
+
+  /* INVEST CARDS */
+  .invest-card { border: 1.5px solid var(--melon150); border-radius: 12px; padding: 14px 16px; background: #fff; margin-bottom: 8px; }
+  .invest-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+  .invest-card-name { font-size: 14px; font-weight: 700; color: var(--dark); }
+  .invest-card-type { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.3px; }
+  .invest-card-desc { font-size: 12px; color: #666; line-height: 1.4; }
+
+  /* PORTFOLIO TABLE */
+  .ptable { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 13px; }
+  .ptable th { text-align: left; padding: 7px 9px; background: #f5f5f5; font-weight: 700; font-size: 11px; text-transform: uppercase; color: #666; }
+  .ptable td { padding: 9px; border-bottom: 1px solid #f5f5f5; }
+  .ptable tr:last-child td { border-bottom: none; }
+  .ptotal { background: var(--melon100); border-radius: 10px; padding: 13px 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .ptotal .lbl { font-size: 13px; font-weight: 600; color: var(--dark); }
+  .ptotal .val { font-size: 22px; font-weight: 800; color: var(--melon500); }
+
+  /* PRICE CHANGE ROWS */
+  .price-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 14px; border-radius: 9px; margin-bottom: 7px; }
+  .price-row.up   { background: #dcfce7; }
+  .price-row.down { background: #fee2e2; }
+  .price-row .name   { font-size: 13px; font-weight: 600; color: var(--dark); }
+  .price-row .change { font-size: 14px; font-weight: 800; }
+  .price-row.up   .change { color: #166534; }
+  .price-row.down .change { color: #991b1b; }
+
+  /* INSIGHT */
+  .insight { background: var(--melon100); border-left: 4px solid var(--melon500); border-radius: 0 10px 10px 0; padding: 12px 14px; margin-bottom: 12px; font-size: 13px; line-height: 1.5; color: var(--dark); }
+
+  /* FINAL */
+  .result-hero { background: var(--melon500); color: #fff; border-radius: 16px; padding: 22px 18px; text-align: center; margin-bottom: 18px; }
+  .result-hero .lbl  { font-size: 12px; font-weight: 600; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+  .result-hero .amt  { font-size: 44px; font-weight: 900; line-height: 1; margin-bottom: 4px; }
+  .result-hero .gain { font-size: 15px; font-weight: 700; opacity: 0.9; }
+
+  .breakdown-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5; font-size: 14px; }
+  .breakdown-row:last-child { border-bottom: none; }
+
+  /* COMPOUNDING CARDS */
+  .compound-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+  .compound-card { border-radius: 12px; padding: 16px; }
+  .compound-card.primary { background: var(--melon500); color: #fff; }
+  .compound-card.secondary { background: var(--melon50); border: 1.5px solid var(--melon150); }
+  .compound-card .clbl { font-size: 11px; font-weight: 700; opacity: 0.75; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
+  .compound-card.secondary .clbl { color: var(--melon600); opacity: 1; }
+  .compound-card .camt { font-size: 34px; font-weight: 900; line-height: 1.1; }
+  .compound-card.secondary .camt { color: var(--dark); }
+  .compound-card .csub { font-size: 12px; opacity: 0.75; margin-top: 4px; }
+  .compound-card.secondary .csub { color: #666; opacity: 1; }
+
+  /* BUTTONS */
+  .btn { display: block; width: 100%; padding: 15px; font-size: 15px; font-weight: 800; border: none; border-radius: 12px; cursor: pointer; text-align: center; margin-bottom: 8px; transition: opacity 0.15s; }
+  .btn:active { opacity: 0.8; }
+  .btn-primary   { background: var(--melon500); color: #fff; }
+  .btn-secondary { background: #f0f0f0; color: #333; }
+  .btn-outline   { background: transparent; border: 2px solid var(--melon500); color: var(--melon500); }
+  .btn:disabled  { opacity: 0.35; cursor: not-allowed; }
+
+  hr.div { border: none; border-top: 1px solid #f0f0f0; margin: 16px 0; }
+  .disclaimer { font-size: 11px; color: #aaa; line-height: 1.5; margin-bottom: 14px; }
+</style>
+</head>
+<body>
+
+<!-- SCREEN 0: Welcome -->
+<div class="screen active" id="screen-0">
+  <div class="pill">Global Investor Challenge</div>
+  <h1>Kia ora!<br>Let's <span class="brand">invest.</span></h1>
+  <p style="margin-top:8px;">You have <strong>$1,000</strong> to invest. Your choices will ride through 10 years of market events — how will you end up?</p>
+  <p>Enter your group name to get started.</p>
+  <input class="team-input" id="team-name-input" type="text" placeholder="Group name..." maxlength="24" />
+  <button class="btn btn-primary" id="btn-start" onclick="startGame()" disabled>Let's invest →</button>
+</div>
+
+<!-- SCREEN 1: Choose Strategy -->
+<div class="screen" id="screen-1">
+  <div class="steps">
+    <div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div>
+  </div>
+  <div class="pill">Year 0 — Start investing</div>
+  <h1>Choose your<br><span class="brand">strategy</span></h1>
+  <p>You'll be assigned a group strategy — keep it quiet until the debrief!</p>
+
+  <div class="strategy-grid">
+    <div class="strategy-card" onclick="selectStrategy('short')" id="strat-short">
+      <div class="tag">Short term · 5–10 years</div>
+      <h3>Saving for a house</h3>
+      <p>Investing with a shorter timeframe. The risk of loss matters more when your goal is close.</p>
+    </div>
+    <div class="strategy-card" onclick="selectStrategy('long')" id="strat-long">
+      <div class="tag">Long term · 20–30 years</div>
+      <h3>Saving for retirement</h3>
+      <p>Investing for the distant future. More time means more ability to ride out the ups and downs.</p>
+    </div>
+    <div class="strategy-card" onclick="selectStrategy('custom')" id="strat-custom">
+      <div class="tag">Open strategy</div>
+      <h3>Custom split</h3>
+      <p>Decide exactly how much to put in each investment. Mix it up!</p>
+    </div>
+  </div>
+
+  <!-- Custom sliders -->
+  <div id="custom-alloc" style="display:none;">
+    <h2 style="font-size:15px;margin-bottom:12px;">Drag to allocate your $1,000</h2>
+    <div id="slider-nzx" class="alloc-item"><div class="alloc-header"><span class="alloc-label">NZX 50 Index Fund</span><span class="alloc-value" id="alloc-nzx-val">$250</span></div><input type="range" min="0" max="1000" step="50" value="250" id="alloc-nzx" oninput="updateAlloc()"></div>
+    <div id="slider-sp"  class="alloc-item"><div class="alloc-header"><span class="alloc-label">S&amp;P 500 Index Fund</span><span class="alloc-value" id="alloc-sp-val">$250</span></div><input type="range" min="0" max="1000" step="50" value="250" id="alloc-sp" oninput="updateAlloc()"></div>
+    <div id="slider-bsc" class="alloc-item"><div class="alloc-header"><span class="alloc-label">Byte-Sized Capital</span><span class="alloc-value" id="alloc-bsc-val">$250</span></div><input type="range" min="0" max="1000" step="50" value="250" id="alloc-bsc" oninput="updateAlloc()"></div>
+    <div id="slider-fh"  class="alloc-item"><div class="alloc-header"><span class="alloc-label">Fly-High Airlines</span><span class="alloc-value" id="alloc-fh-val">$250</span></div><input type="range" min="0" max="1000" step="50" value="250" id="alloc-fh" oninput="updateAlloc()"></div>
+    <div class="alloc-total"><span>Total allocated</span><span class="total-num" id="alloc-total-display">$1,000</span></div>
+  </div>
+
+  <!-- All-in picker (for short/long with optional pick) -->
+  <div id="allin-picker" style="display:none;">
+    <h2 style="font-size:15px;margin-bottom:10px;">Which investment gets all $1,000?</h2>
+    <div class="allin-card" onclick="selectAllIn('nzx')" id="allin-nzx"><div class="allin-card-name">NZX 50 Index Fund</div><div class="allin-card-type">Index · New Zealand</div></div>
+    <div class="allin-card" onclick="selectAllIn('sp')"  id="allin-sp"><div class="allin-card-name">S&amp;P 500 Index Fund</div><div class="allin-card-type">Index · USA</div></div>
+    <div class="allin-card" onclick="selectAllIn('bsc')" id="allin-bsc"><div class="allin-card-name">Byte-Sized Capital</div><div class="allin-card-type">Single stock · AI</div></div>
+    <div class="allin-card" onclick="selectAllIn('fh')"  id="allin-fh"><div class="allin-card-name">Fly-High Airlines</div><div class="allin-card-type">Single stock · Travel</div></div>
+  </div>
+
+  <button class="btn btn-primary" id="btn-to-part2" onclick="goToPortfolio()" disabled>Lock in my portfolio →</button>
+</div>
+
+<!-- SCREEN 2: Portfolio confirmed -->
+<div class="screen" id="screen-2">
+  <div class="steps">
+    <div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div>
+  </div>
+  <div class="pill">Year 0 — Your portfolio</div>
+  <h1 id="team-display-2" class="brand">Group</h1>
+  <p>Here's what you're starting with. Share prices are set at market open.</p>
+  <table class="ptable" id="ptable-start"><thead><tr><th>Investment</th><th style="text-align:right">Invested</th><th style="text-align:right">Share price</th><th style="text-align:right">Shares</th></tr></thead><tbody></tbody></table>
+  <div class="ptotal"><span class="lbl">Starting value</span><span class="val">$1,000.00</span></div>
+  <div class="invest-card"><div class="invest-card-header"><span class="invest-card-name">NZX 50 Index Fund</span><span class="invest-card-type">Index · NZ</span></div><p class="invest-card-desc">Exposure to the top 50 NZX listed companies and the NZ economy in general.</p></div>
+  <div class="invest-card"><div class="invest-card-header"><span class="invest-card-name">S&amp;P 500 Index Fund</span><span class="invest-card-type">Index · USA</span></div><p class="invest-card-desc">Exposure to the top 500 US listed companies, and the US and broader global economy.</p></div>
+  <div class="invest-card"><div class="invest-card-header"><span class="invest-card-name">Byte-Sized Capital</span><span class="invest-card-type">Single stock · Tech · US based</span></div><p class="invest-card-desc">A single US-based technology company riding the wave of artificial intelligence and machine learning.</p></div>
+  <div class="invest-card"><div class="invest-card-header"><span class="invest-card-name">Fly-High Airlines</span><span class="invest-card-type">Single stock · Airline · NZ based</span></div><p class="invest-card-desc">A single NZ-based airline company, exposed to travel disruptions, fuel prices, and tourism demand.</p></div>
+  <button class="btn btn-primary" onclick="showScreen('screen-yr3-event')">Ready for Year 3 →</button>
+</div>
+
+<!-- SCREEN 3: Year 3 event -->
+<div class="screen" id="screen-yr3-event">
+  <div class="steps">
+    <div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div>
+  </div>
+  <div class="year-badge berry">
+    <div class="yr">Year 3</div>
+    <h2>A market event hits 🌍</h2>
+    <p>Borders close. Lockdowns start. Markets react — but not all the same way.</p>
+  </div>
+  <h2>How markets reacted</h2>
+  <div class="price-row down"><span class="name">NZX 50 Index Fund</span><span class="change">$8.50 → $7.65 ↓</span></div>
+  <div class="price-row down"><span class="name">S&amp;P 500 Index Fund</span><span class="change">$520.00 → $495.04 ↓</span></div>
+  <div class="price-row up">  <span class="name">Byte-Sized Capital</span><span class="change">$42.00 → $75.60 ↑</span></div>
+  <div class="price-row down"><span class="name">Fly-High Airlines</span><span class="change">$3.20 → $0.96 ↓</span></div>
+  <div class="insight">Remote work and online demand for AI skyrocketed — tech boomed. Grounded planes and travel bans caused airlines to lose 70% of their value.</div>
+  <button class="btn btn-primary" onclick="showYr3Result()">See my portfolio →</button>
+</div>
+
+<!-- SCREEN 4: Portfolio after Year 3 -->
+<div class="screen" id="screen-yr3-result">
+  <div class="pill berry">After Year 3</div>
+  <h1 id="team-display-4" class="brand">Group</h1>
+  <table class="ptable" id="ptable-yr3"><thead><tr><th>Investment</th><th style="text-align:right">Shares</th><th style="text-align:right">Now worth</th></tr></thead><tbody></tbody></table>
+  <div class="ptotal"><span class="lbl">Portfolio value</span><span class="val" id="yr3-total"></span></div>
+  <div class="insight" id="yr3-insight"></div>
+  <hr class="div">
+  <h2>Year 5 — Rebalance?</h2>
+  <p>Two years later, markets are still shaken. You can keep your portfolio as-is, or <strong>rebalance</strong> — sell your winners and buy more of the cheaper investments.</p>
+  <button class="btn btn-primary" onclick="goToRebalance()">I want to rebalance →</button>
+  <button class="btn btn-secondary" onclick="showScreen('screen-yr10-event')">Keep my portfolio as-is</button>
+</div>
+
+<!-- SCREEN 5: Rebalance -->
+<div class="screen" id="screen-rebalance">
+  <div class="year-badge grape">
+    <div class="yr">Year 5</div>
+    <h2>Rebalance your portfolio 🔄</h2>
+    <p>Use the sliders to set what <strong>% of your portfolio</strong> goes into each investment.</p>
+  </div>
+
+  <!-- Original $1000 vs current value -->
+  <div style="background:#fff;border:1.5px solid var(--melon150);border-radius:12px;padding:14px 16px;margin-bottom:14px;">
+    <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:8px;">Your portfolio journey</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:11px;color:#888;margin-bottom:2px;">Started with</div>
+        <div style="font-size:20px;font-weight:800;color:var(--dark);">$1,000</div>
+      </div>
+      <div style="font-size:20px;color:var(--melon300);">→</div>
+      <div style="text-align:right;">
+        <div style="font-size:11px;color:#888;margin-bottom:2px;">Now worth</div>
+        <div style="font-size:20px;font-weight:800;" id="rb-current-val">$0</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:11px;color:#888;margin-bottom:2px;">Change</div>
+        <div style="font-size:16px;font-weight:800;" id="rb-change">$0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="insight" style="margin-bottom:14px;"><strong>Tip:</strong> Sell what's gone up, buy what's gone down — "buying low, selling high." Set to 0% to cash out of an investment entirely.</div>
+
+  <div id="rebalance-sliders"></div>
+
+  <!-- Running total -->
+  <div style="background:var(--melon100);border-radius:10px;padding:12px 16px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">
+    <span style="font-size:13px;font-weight:600;color:var(--dark);">Total allocated</span>
+    <span style="font-size:20px;font-weight:800;color:var(--melon500);" id="rb-pct-total">0%</span>
+  </div>
+  <div style="text-align:center;font-size:13px;font-weight:700;margin-bottom:14px;" id="rb-remaining"></div>
+
+  <button class="btn btn-primary" id="btn-confirm-rb" onclick="confirmRebalance()" disabled>Lock in rebalance →</button>
+  <button class="btn btn-secondary" onclick="showScreen('screen-yr10-event')">Keep my portfolio as-is</button>
+</div>
+
+<!-- SCREEN 6: Year 10 event -->
+<div class="screen" id="screen-yr10-event">
+  <div class="steps">
+    <div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div>
+  </div>
+  <div class="year-badge green">
+    <div class="yr">Year 10</div>
+    <h2>Markets move again 🚀</h2>
+    <p>The economy shifts. AI investment keeps growing. Airlines slowly recover.</p>
+  </div>
+  <h2>Final prices</h2>
+  <div class="price-row up">  <span class="name">NZX 50 Index Fund</span><span class="change">$7.65 → $10.20 ↑</span></div>
+  <div class="price-row up">  <span class="name">S&amp;P 500 Index Fund</span><span class="change">$495.04 → $780.00 ↑</span></div>
+  <div class="price-row up">  <span class="name">Byte-Sized Capital</span><span class="change">$75.60 → $168.00 ↑</span></div>
+  <div class="price-row up">  <span class="name">Fly-High Airlines</span><span class="change">$0.96 → $3.20 ↑</span></div>
+  <button class="btn btn-primary" onclick="showFinalResult()">See my final result →</button>
+</div>
+
+<!-- SCREEN 7: Final Result -->
+<div class="screen" id="screen-final">
+  <div class="pill">Final result — Year 10</div>
+  <div class="result-hero">
+    <div class="lbl" id="final-team-name">Group</div>
+    <div class="amt" id="final-amount">$0</div>
+    <div class="gain" id="final-gain">+$0</div>
+  </div>
+  <h2>Breakdown</h2>
+  <div id="final-breakdown" style="margin-bottom:16px;"></div>
+  <hr class="div">
+  <h2>The power of compounding</h2>
+  <p>What if you left this invested for 30 more years?</p>
+  <div class="compound-card primary" style="margin-bottom:10px;">
+    <div class="clbl">Your portfolio × 10.06</div>
+    <div class="camt" id="compound-portfolio">$0</div>
+    <div class="csub">If you left this invested for 30 years at 8%/yr</div>
+  </div>
+  <div class="insight" id="final-insight"></div>
+  <button class="btn btn-primary" onclick="showScreen('screen-snowball')">See the snowball effect →</button>
+  <hr class="div">
+  <p class="disclaimer">Investing involves risk. You aren't guaranteed to make money, and you might lose the money you start with. This game is for educational purposes only.</p>
+  <button class="btn btn-outline" onclick="resetGame()">Play again</button>
+</div>
+
+<!-- SCREEN 8: Snowball / growing contributions -->
+<div class="screen" id="screen-snowball">
+  <div class="pill">The snowball effect</div>
+  <h1>Start small.<br><span class="brand">Grow with<br>your income.</span></h1>
+  <p style="margin-bottom:18px;">What happens when you increase your contributions as your income grows — at 7.5% annual return.</p>
+
+  <div style="display:flex;flex-direction:column;">
+
+    <!-- Phase 1 -->
+    <div style="border:1.5px solid var(--melon150);border-radius:12px 12px 0 0;overflow:hidden;">
+      <div style="background:var(--melon500);padding:10px 16px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:12px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:0.5px;">Years 1–10</span>
+        <span style="font-size:12px;font-weight:600;color:var(--melon150);">Early career</span>
+      </div>
+      <div style="padding:14px 16px;background:#fff;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:10px;">
+          <div>
+            <div style="font-size:11px;color:#888;margin-bottom:2px;">Weekly contribution</div>
+            <div style="font-size:32px;font-weight:900;color:var(--melon500);line-height:1;">$50</div>
+            <div style="font-size:11px;color:#888;">= $2,600 / year</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:11px;color:#888;margin-bottom:2px;">Total contributed</div>
+            <div style="font-size:18px;font-weight:800;color:var(--dark);">$26,000</div>
+          </div>
+        </div>
+        <div style="background:var(--melon50);border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:10px;color:#888;margin-bottom:1px;">Portfolio at Year 10</div>
+            <div style="font-size:22px;font-weight:900;color:var(--dark);">$38,683</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:11px;color:#888;margin-bottom:1px;">Growth</div>
+            <div style="font-size:16px;font-weight:800;color:#166534;">+49%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Connector -->
+    <div style="background:var(--melon100);padding:7px 16px;border-left:1.5px solid var(--melon150);border-right:1.5px solid var(--melon150);text-align:center;">
+      <span style="font-size:12px;font-weight:700;color:var(--melon600);">↓ Income grows — you invest more ↓</span>
+    </div>
+
+    <!-- Phase 2 -->
+    <div style="border:1.5px solid var(--melon150);border-top:none;border-bottom:none;overflow:hidden;">
+      <div style="background:var(--melon600);padding:10px 16px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:12px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:0.5px;">Years 11–20</span>
+        <span style="font-size:12px;font-weight:600;color:var(--melon150);">Mid career</span>
+      </div>
+      <div style="padding:14px 16px;background:#fff;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:10px;">
+          <div>
+            <div style="font-size:11px;color:#888;margin-bottom:2px;">Weekly contribution</div>
+            <div style="font-size:32px;font-weight:900;color:var(--melon500);line-height:1;">$150</div>
+            <div style="font-size:11px;color:#888;">= $7,800 / year</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:11px;color:#888;margin-bottom:2px;">Total contributed (all time)</div>
+            <div style="font-size:18px;font-weight:800;color:var(--dark);">$104,000</div>
+          </div>
+        </div>
+        <div style="background:var(--melon50);border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:10px;color:#888;margin-bottom:1px;">Portfolio at Year 20</div>
+            <div style="font-size:22px;font-weight:900;color:var(--dark);">$197,897</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:11px;color:#888;margin-bottom:1px;">Growth on contributions</div>
+            <div style="font-size:16px;font-weight:800;color:#166534;">+90%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Connector -->
+    <div style="background:var(--melon100);padding:7px 16px;border-left:1.5px solid var(--melon150);border-right:1.5px solid var(--melon150);text-align:center;">
+      <span style="font-size:12px;font-weight:700;color:var(--melon600);">↓ Income grows — you invest more ↓</span>
+    </div>
+
+    <!-- Phase 3 -->
+    <div style="border:1.5px solid var(--melon150);border-top:none;border-radius:0 0 12px 12px;overflow:hidden;">
+      <div style="background:var(--melon700);padding:10px 16px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:12px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:0.5px;">Years 21–30</span>
+        <span style="font-size:12px;font-weight:600;color:var(--melon150);">Peak earning years</span>
+      </div>
+      <div style="padding:14px 16px;background:#fff;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:10px;">
+          <div>
+            <div style="font-size:11px;color:#888;margin-bottom:2px;">Weekly contribution</div>
+            <div style="font-size:32px;font-weight:900;color:var(--melon500);line-height:1;">$300</div>
+            <div style="font-size:11px;color:#888;">= $15,600 / year</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:11px;color:#888;margin-bottom:2px;">Total contributed (all time)</div>
+            <div style="font-size:18px;font-weight:800;color:var(--dark);">$260,000</div>
+          </div>
+        </div>
+        <div style="background:var(--melon500);border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.75);margin-bottom:1px;">Portfolio at Year 30</div>
+            <div style="font-size:26px;font-weight:900;color:#fff;">$650,819</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:11px;color:rgba(255,255,255,0.75);margin-bottom:1px;">Growth on contributions</div>
+            <div style="font-size:18px;font-weight:900;color:#fff;">+150%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- The kicker -->
+  <div style="background:var(--dark);border-radius:12px;padding:18px 16px;margin-top:14px;text-align:center;">
+    <div style="font-size:11px;font-weight:700;color:var(--melon300);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">You put in $260,000 — you end up with</div>
+    <div style="font-size:46px;font-weight:900;color:#fff;line-height:1.1;">$650,819</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.6);margin-top:8px;">That's $390,819 extra from compounding alone — <br>more than you ever contributed</div>
+  </div>
+
+  <p style="font-size:11px;color:#aaa;margin-top:14px;line-height:1.5;">Hypothetical. 7.5% annual return assumed. Investing involves risk — you aren't guaranteed to make money and may lose what you put in.</p>
+  <button class="btn btn-outline" style="margin-top:4px;" onclick="resetGame()">Play again</button>
+</div>
+
+<script>
+const INVESTMENTS = {
+  nzx: { name: 'NZX 50 Index Fund',  type: 'Index · NZ',                  desc: 'Exposure to top 50 NZX listed companies and the NZ economy in general.' },
+  sp:  { name: 'S&P 500 Index Fund', type: 'Index · USA',                  desc: 'Exposure to top 500 US listed companies and the US and broader global economy.' },
+  bsc: { name: 'Byte-Sized Capital', type: 'Single stock · Tech · US based', desc: 'A single US-based tech company — AI and machine learning focused.' },
+  fh:  { name: 'Fly-High Airlines',  type: 'Single stock · Airline · NZ based', desc: 'A single NZ-based airline, exposed to travel disruptions and fuel prices.' }
+};
+const KEYS = ['nzx','sp','bsc','fh'];
+const PRICES = {
+  start: { nzx: 8.50,  sp: 520.00, bsc: 42.00, fh: 3.20 },
+  yr3:   { nzx: 7.65,  sp: 495.04, bsc: 75.60, fh: 0.96 },
+  yr10:  { nzx: 10.20, sp: 780.00, bsc: 168.00, fh: 3.20 }
+};
+
+let state = {
+  teamName: '', strategy: null, allInChoice: null,
+  allocation: { nzx:250, sp:250, bsc:250, fh:250 },
+  shares: {}
+};
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// Welcome
+document.getElementById('team-name-input').addEventListener('input', function() {
+  state.teamName = this.value.trim();
+  document.getElementById('btn-start').disabled = state.teamName.length < 1;
+});
+function startGame() { if (state.teamName) showScreen('screen-1'); }
+
+// Strategy
+function selectStrategy(s) {
+  state.strategy = s;
+  state.allInChoice = null;
+  document.querySelectorAll('.strategy-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('strat-'+s).classList.add('selected');
+
+  const isCustom = s === 'custom';
+  document.getElementById('custom-alloc').style.display = isCustom ? 'block' : 'none';
+  document.getElementById('allin-picker').style.display = 'none';
+
+  if (isCustom) {
+    // reset sliders to equal split
+    state.allocation = {nzx:250, sp:250, bsc:250, fh:250};
+    ['nzx','sp','bsc','fh'].forEach(k => {
+      document.getElementById('alloc-'+k).value = 250;
+      document.getElementById('alloc-'+k+'-val').textContent = '$250';
+    });
+    document.getElementById('alloc-total-display').textContent = '$1,000';
+    document.getElementById('alloc-total-display').className = 'total-num';
+    document.getElementById('btn-to-part2').disabled = false;
+  } else {
+    // short/long: equal split by default, button enabled
+    state.allocation = {nzx:250, sp:250, bsc:250, fh:250};
+    document.getElementById('btn-to-part2').disabled = false;
+  }
+}
+
+function updateAlloc() {
+  const vals = {};
+  KEYS.forEach(k => { vals[k] = parseInt(document.getElementById('alloc-'+k).value); });
+  const total = KEYS.reduce((s,k) => s+vals[k], 0);
+  KEYS.forEach(k => {
+    state.allocation[k] = vals[k];
+    document.getElementById('alloc-'+k+'-val').textContent = '$'+vals[k];
+  });
+  const el = document.getElementById('alloc-total-display');
+  el.textContent = total >= 1000 ? '$1,000' : '$'+total;
+  el.className = 'total-num' + (total !== 1000 ? ' total-warn' : '');
+  document.getElementById('btn-to-part2').disabled = total !== 1000;
+}
+
+function selectAllIn(key) {
+  state.allInChoice = key;
+  state.allocation = {nzx:0, sp:0, bsc:0, fh:0};
+  state.allocation[key] = 1000;
+  document.querySelectorAll('.allin-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('allin-'+key).classList.add('selected');
+  document.getElementById('btn-to-part2').disabled = false;
+}
+
+function goToPortfolio() {
+  KEYS.forEach(k => { state.shares[k] = state.allocation[k] / PRICES.start[k]; });
+  document.getElementById('team-display-2').textContent = state.teamName;
+  const tbody = document.querySelector('#ptable-start tbody');
+  tbody.innerHTML = '';
+  KEYS.forEach(k => {
+    if (state.allocation[k] > 0) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${INVESTMENTS[k].name}</td><td style="text-align:right">$${state.allocation[k].toFixed(0)}</td><td style="text-align:right">$${PRICES.start[k].toFixed(2)}</td><td style="text-align:right">${state.shares[k].toFixed(4)}</td>`;
+      tbody.appendChild(tr);
+    }
+  });
+  showScreen('screen-2');
+}
+
+function calcVal(priceKey) {
+  return KEYS.reduce((sum,k) => sum + state.shares[k]*PRICES[priceKey][k], 0);
+}
+
+function showYr3Result() {
+  const val = calcVal('yr3');
+  document.getElementById('team-display-4').textContent = state.teamName;
+  document.getElementById('yr3-total').textContent = '$'+val.toFixed(2);
+  const tbody = document.querySelector('#ptable-yr3 tbody');
+  tbody.innerHTML = '';
+  KEYS.forEach(k => {
+    if (state.shares[k] > 0) {
+      const worth = state.shares[k]*PRICES.yr3[k];
+      const color = worth >= state.allocation[k] ? '#166534' : '#991b1b';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${INVESTMENTS[k].name}</td><td style="text-align:right">${state.shares[k].toFixed(2)}</td><td style="text-align:right;color:${color};font-weight:700">$${worth.toFixed(2)}</td>`;
+      tbody.appendChild(tr);
+    }
+  });
+  const gain = val - 1000;
+  let insight = '';
+  if (state.allocation.fh >= 750) insight = 'Ouch — Fly-High got crushed. Going all-in on one stock is risky. This is why diversification matters.';
+  else if (state.allocation.bsc >= 750) insight = 'Byte-Sized Capital took off! But what if it had crashed instead? Single stocks are unpredictable.';
+  else if (gain < -100) insight = 'Your portfolio took a hit. The event was unpredictable — this is why spreading your money matters.';
+  else if (gain > 100) insight = 'Nice! Your portfolio weathered the storm well. Diversification is working.';
+  else insight = 'Mixed results — notice which investments hurt and which helped. That\'s diversification in action.';
+  document.getElementById('yr3-insight').textContent = insight;
+
+  // Store yr3 values for rebalance sliders
+  state._yr3vals = {};
+  KEYS.forEach(k => { state._yr3vals[k] = state.shares[k]*PRICES.yr3[k]; });
+  showScreen('screen-yr3-result');
+}
+
+function goToRebalance() {
+  // Total portfolio value at Year 3 prices
+  state._rbPool = KEYS.reduce((s,k) => s + (state._yr3vals[k]||0), 0);
+  const pool = state._rbPool;
+
+  // Starting percentages based on current holdings (rounded to nearest 5%)
+  const initPcts = {};
+  let totalPct = 0;
+  KEYS.forEach((k, i) => {
+    const raw = state._yr3vals[k] || 0;
+    if (i < KEYS.length - 1) {
+      initPcts[k] = Math.round((raw / pool) * 20) * 5; // round to nearest 5%
+      totalPct += initPcts[k];
+    } else {
+      initPcts[k] = 100 - totalPct; // last one gets the remainder
+    }
+  });
+
+  // Show portfolio journey
+  const change = pool - 1000;
+  document.getElementById('rb-current-val').textContent = '$' + pool.toFixed(0);
+  document.getElementById('rb-current-val').style.color = change >= 0 ? '#166534' : '#991b1b';
+  document.getElementById('rb-change').textContent = (change >= 0 ? '+' : '') + '$' + change.toFixed(0);
+  document.getElementById('rb-change').style.color = change >= 0 ? '#166534' : '#991b1b';
+
+  const container = document.getElementById('rebalance-sliders');
+  container.innerHTML = '';
+  KEYS.forEach(k => {
+    const curVal = (state._yr3vals[k]||0).toFixed(0);
+    const pct = initPcts[k];
+    const newDollar = Math.round(pool * pct / 100);
+    container.innerHTML += `
+      <div class="alloc-item" style="background:#fff;border:1.5px solid var(--melon150);border-radius:10px;padding:12px 14px;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span class="alloc-label">${INVESTMENTS[k].name}</span>
+          <span style="font-size:11px;color:#888;">Currently $${curVal}</span>
+        </div>
+        <input type="range" min="0" max="100" step="5" value="${pct}" id="rb-${k}" oninput="updateRb()" style="width:100%;accent-color:var(--melon500);margin-bottom:6px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:18px;font-weight:800;color:var(--melon500);" id="rb-${k}-pct">${pct}%</span>
+          <span style="font-size:13px;font-weight:700;color:var(--dark);" id="rb-${k}-val">= $${newDollar}</span>
+        </div>
+      </div>`;
+  });
+
+  updateRb();
+  showScreen('screen-rebalance');
+}
+
+function updateRb() {
+  const pool = state._rbPool || 1000;
+  const total = KEYS.reduce((s,k) => s + parseInt(document.getElementById('rb-'+k).value), 0);
+  KEYS.forEach(k => {
+    const pct = parseInt(document.getElementById('rb-'+k).value);
+    const dollars = Math.round(pool * pct / 100);
+    document.getElementById('rb-'+k+'-pct').textContent = pct + '%';
+    document.getElementById('rb-'+k+'-val').textContent = '= $' + dollars.toLocaleString();
+  });
+  document.getElementById('rb-pct-total').textContent = total + '%';
+  document.getElementById('rb-pct-total').style.color = total === 100 ? '#166534' : 'var(--melon500)';
+  const remEl = document.getElementById('rb-remaining');
+  if (total === 100) {
+    remEl.textContent = '✓ Ready to go';
+    remEl.style.color = '#166534';
+  } else if (total < 100) {
+    remEl.textContent = (100 - total) + '% still to allocate';
+    remEl.style.color = '#991b1b';
+  } else {
+    remEl.textContent = (total - 100) + '% over — reduce an investment';
+    remEl.style.color = '#991b1b';
+  }
+  document.getElementById('btn-confirm-rb').disabled = total !== 100;
+}
+
+function confirmRebalance() {
+  const pool = state._rbPool || 1000;
+  KEYS.forEach(k => {
+    const pct = parseInt(document.getElementById('rb-'+k).value);
+    const dollars = pool * pct / 100;
+    // Buy shares at Year 3 prices with the new dollar allocation
+    state.shares[k] = dollars / PRICES.yr3[k];
+  });
+  showScreen('screen-yr10-event');
+}
+
+function showFinalResult() {
+  const val = calcVal('yr10');
+  const gain = val - 1000;
+  document.getElementById('final-team-name').textContent = state.teamName;
+  document.getElementById('final-amount').textContent = '$'+val.toFixed(2);
+  document.getElementById('final-gain').textContent = (gain>=0?'+':'')+gain.toFixed(2) + (gain>=0?' 🎉':' 📉');
+
+  const bd = document.getElementById('final-breakdown');
+  bd.innerHTML = '';
+  KEYS.forEach(k => {
+    if (state.shares[k] > 0) {
+      const worth = state.shares[k]*PRICES.yr10[k];
+      const diff = worth - state.allocation[k];
+      const color = diff >= 0 ? '#166534' : '#991b1b';
+      bd.innerHTML += `<div class="breakdown-row"><span style="font-weight:600">${INVESTMENTS[k].name}</span><span style="font-weight:700;color:${color}">$${worth.toFixed(2)}</span></div>`;
+    }
+  });
+
+  document.getElementById('compound-portfolio').textContent = '$'+Math.round(val*10.06).toLocaleString();
+
+  const bscWorth = state.shares.bsc*PRICES.yr10.bsc;
+  const fhWorth  = state.shares.fh *PRICES.yr10.fh;
+  const idxWorth = state.shares.nzx*PRICES.yr10.nzx + state.shares.sp*PRICES.yr10.sp;
+  let insight = '';
+  if (bscWorth > 1500) insight = 'Byte-Sized Capital was the star! But if you\'d put everything here, one bad event could have wiped you out. High returns always come with high risk.';
+  else if (fhWorth > 700 && state.allocation.fh >= 500) insight = 'Airlines recovered! But during Year 3 this investment lost 70% of its value. Could you have held on through that in real life?';
+  else if (idxWorth > 600 && bscWorth < 500) insight = 'Your index funds delivered steady, reliable growth. Not the biggest winner — but consistent and much less stressful.';
+  else insight = 'Every group told a different story. The lesson: spreading your money across different investments helps protect you from any single bad event.';
+  document.getElementById('final-insight').textContent = insight;
+  showScreen('screen-final');
+}
+
+function resetGame() {
+  state = { teamName:'', strategy:null, allInChoice:null, allocation:{nzx:250,sp:250,bsc:250,fh:250}, shares:{} };
+  document.getElementById('team-name-input').value = '';
+  document.getElementById('btn-start').disabled = true;
+  document.querySelectorAll('.strategy-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('custom-alloc').style.display = 'none';
+  document.getElementById('allin-picker').style.display = 'none';
+  document.getElementById('btn-to-part2').disabled = true;
+  showScreen('screen-0');
+}
+</script>
+</body>
+</html>
